@@ -1,4 +1,4 @@
-import { Expense, BudgetConfig, RecurringExpense } from "../types";
+import { Expense, BudgetConfig, RecurringExpense, AccountBalances, Income } from "../types";
 
 const now = new Date();
 const currentYear = now.getFullYear();
@@ -7,6 +7,14 @@ const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
 export const INITIAL_MOCK_EXPENSES: Expense[] = [];
+
+export const DEFAULT_BALANCES: AccountBalances = {
+  cashBalance: 0,
+  bankBalance: 0,
+  updatedAt: new Date().toISOString(),
+};
+
+export const INITIAL_INCOMES: Income[] = [];
 
 export const DEFAULT_BUDGET: BudgetConfig = {
   id: "budget-curr",

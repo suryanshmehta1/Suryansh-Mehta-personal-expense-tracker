@@ -154,6 +154,40 @@ export interface UserProfile {
   monthlyBudgetLimit: number;
 }
 
+export interface AccountBalances {
+  cashBalance: number;
+  bankBalance: number;
+  updatedAt: string;
+}
+
+export type IncomeSource =
+  | "Salary"
+  | "Client Payment"
+  | "Business Income"
+  | "Freelance"
+  | "Investment Returns"
+  | "Refund"
+  | "Rental Income"
+  | "Gift / Allowance"
+  | "Cash Deposit"
+  | "Other";
+
+export interface Income {
+  id: string;
+  userId: string;
+  title: string;
+  amount: number;
+  currency: CurrencyCode;
+  date: string; // YYYY-MM-DD
+  time?: string;
+  destinationAccount: "Bank" | "Cash";
+  source: IncomeSource | string;
+  notes?: string;
+  status: "received" | "deleted";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SearchFilterState {
   searchQuery: string;
   dateRange: "all" | "today" | "yesterday" | "this_week" | "this_month" | "this_year" | "custom";

@@ -14,6 +14,11 @@ import {
   Receipt,
   Bot,
   Zap,
+  Landmark,
+  Banknote,
+  ArrowDownLeft,
+  Wallet,
+  Edit3,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -28,13 +33,17 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Expense, BudgetConfig } from "../types";
+import { Expense, BudgetConfig, AccountBalances, Income } from "../types";
 import { formatCurrency } from "../lib/exportUtils";
 
 interface DashboardProps {
   expenses: Expense[];
   budget: BudgetConfig;
+  balances: AccountBalances;
+  incomes: Income[];
   onOpenAddExpense: () => void;
+  onOpenAddIncome: () => void;
+  onOpenEditBalances: () => void;
   onOpenAiAdvisor: () => void;
   onOpenReceiptScan: () => void;
   onSelectExpense: (exp: Expense) => void;
@@ -54,18 +63,27 @@ const COLORS = [
 export const Dashboard: React.FC<DashboardProps> = ({
   expenses,
   budget,
+  balances,
+  incomes,
   onOpenAddExpense,
+  onOpenAddIncome,
+  onOpenEditBalances,
   onOpenAiAdvisor,
   onOpenReceiptScan,
   onSelectExpense,
 }) => {
   const activeExpenses = expenses.filter((e) => e.status !== "deleted");
+  const activeIncomes = incomes.filter((i) => i.status !== "deleted");
 
   // Time calculations
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const currentYearStr = `${now.getFullYear()}`;
+
+  // Income calculations
+  const monthIncomes = activeIncomes.filter((i) => i.date.startsWith(currentMonthStr));
+  const monthIncomeTotal = monthIncomes.reduce((sum, i) => sum + i.amount, 0);
 
   // 1. Today's Expenses
   const todayExpenses = activeExpenses.filter((e) => e.date === todayStr);
@@ -169,6 +187,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <button
+              onClick={onOpenAddIncome}
+              className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
+            >
+              <ArrowDownLeft className="w-4 h-4" />
+              <span>+ Receive Fund</span>
+            </button>
+            <button
               onClick={onOpenReceiptScan}
               className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
             >
@@ -184,11 +209,112 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </button>
             <button
               onClick={onOpenAddExpense}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25 transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25 transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Add Expense</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* AVAILABLE FUNDS & CASH/BANK BALANCES BANNER */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Total Liquid Wealth Card */}
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 space-y-3 relative overflow-hidden shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Total Available Funds</p>
+            </div>
+            <button
+              onClick={onOpenEditBalances}
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            >
+              <Edit3 className="w-3 h-3 text-blue-400" />
+              <span>Adjust</span>
+            </button>
+          </div>
+
+          <div>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
+              {formatCurrency(balances.bankBalance + balances.cashBalance)}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Combined Liquid Balance (Bank + Cash)</p>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+            <button
+              onClick={onOpenAddIncome}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+            >
+              <ArrowDownLeft className="w-4 h-4" />
+              <span>+ Record Funds Received</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Bank Balance Card */}
+        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition-colors shadow-lg flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Bank Balance</p>
+                <p className="text-[10px] text-slate-400">Digital / UPI / Accounts</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              Bank Account
+            </span>
+          </div>
+
+          <div>
+            <p className="text-2xl font-bold text-blue-400 font-mono">
+              {formatCurrency(balances.bankBalance)}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+            <span>Month's Bank Income:</span>
+            <strong className="text-emerald-400 font-mono font-semibold">
+              +{formatCurrency(monthIncomes.filter(i => i.destinationAccount === "Bank").reduce((sum, i) => sum + i.amount, 0))}
+            </strong>
+          </div>
+        </div>
+
+        {/* Cash Balance Card */}
+        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition-colors shadow-lg flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Physical Cash</p>
+                <p className="text-[10px] text-slate-400">Wallet & In-hand Cash</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Cash
+            </span>
+          </div>
+
+          <div>
+            <p className="text-2xl font-bold text-emerald-400 font-mono">
+              {formatCurrency(balances.cashBalance)}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+            <span>Month's Cash Income:</span>
+            <strong className="text-emerald-400 font-mono font-semibold">
+              +{formatCurrency(monthIncomes.filter(i => i.destinationAccount === "Cash").reduce((sum, i) => sum + i.amount, 0))}
+            </strong>
           </div>
         </div>
       </div>
