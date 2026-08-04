@@ -321,6 +321,7 @@ export default function App() {
           setEditingExpense(null);
           setIsAddModalOpen(true);
         }}
+        onOpenScanReceipt={() => setIsOcrModalOpen(true)}
       />
 
       {/* Add / Edit Expense Modal */}
