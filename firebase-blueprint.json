@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "User profiles and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "currency": { "type": "string" },
+        "theme": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "expenses": {
+      "title": "Expense",
+      "description": "Recorded expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "category": { "type": "string" },
+        "subCategory": { "type": "string" },
+        "vendor": { "type": "string" },
+        "location": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentDetails": { "type": "object" },
+        "receiptUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "isRecurring": { "type": "boolean" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "title", "amount", "date", "category", "paymentMethod"]
+    },
+    "budgets": {
+      "title": "Budget",
+      "description": "Monthly and category budgets",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "month": { "type": "string" },
+        "overallLimit": { "type": "number" },
+        "categoryLimits": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "month"]
+    },
+    "recurring": {
+      "title": "Recurring Expense",
+      "description": "Scheduled recurring expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "amount": { "type": "number" },
+        "frequency": { "type": "string" },
+        "category": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "nextDueDate": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["userId", "title", "amount", "frequency"]
+    }
+  }
+}

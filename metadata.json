@@ -1,0 +1,6 @@
+{
+  "name": "Mehta Expense Tracker",
+  "description": "Smart Personal Expense Recording & Financial Tracking System for Suryansh Mehta with AI insights, OCR receipt scanning, budget monitoring, and Google Sheets synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
