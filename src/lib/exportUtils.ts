@@ -1,4 +1,4 @@
-import { Expense, BudgetConfig } from "../types";
+import { Expense, BudgetConfig, Income, AccountBalances } from "../types";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 
@@ -186,6 +186,113 @@ export function exportToPDF(
     doc.text(`INR ${e.amount.toLocaleString()}`, 175, y);
     y += 8;
   });
+
+  doc.save(filename);
+}
+
+// Export Incomes / Received Funds to Excel
+export function exportIncomesToExcel(
+  incomes: Income[],
+  balances?: AccountBalances,
+  filename = "Mehta_Incomes_and_Funds_Report.xlsx"
+) {
+  const data = incomes.map((inc) => ({
+    "Income ID": inc.id,
+    Date: inc.date,
+    Time: inc.time || "",
+    "Payment Title / Source": inc.title,
+    Category: inc.source,
+    "Amount (₹)": inc.amount,
+    "Destination Account": inc.destinationAccount,
+    Notes: inc.notes || "",
+    Status: inc.status,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Received Funds");
+
+  if (balances) {
+    const summaryData = [
+      { Metric: "Available Cash Balance (₹)", Value: balances.cashBalance },
+      { Metric: "Available Bank Balance (₹)", Value: balances.bankBalance },
+      { Metric: "Total Liquid Wealth (₹)", Value: balances.cashBalance + balances.bankBalance },
+      { Metric: "Last Updated", Value: balances.updatedAt },
+    ];
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Account Summary");
+  }
+
+  XLSX.writeFile(workbook, filename);
+}
+
+// Export PDF Cash & Bank Accounts Statement Report
+export function exportAccountReportToPDF(
+  incomes: Income[],
+  expenses: Expense[],
+  balances: AccountBalances,
+  filename = "Mehta_Accounts_Cashflow_Report.pdf"
+) {
+  const doc = new jsPDF();
+
+  // Header
+  doc.setFontSize(18);
+  doc.setTextColor(16, 185, 129); // Emerald
+  doc.text("SURYANSH MEHTA - CASH & BANK ACCOUNTS STATEMENT", 14, 20);
+
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Report Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 28);
+
+  // Balances Box
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text("AVAILABLE LIQUID BALANCES", 14, 38);
+
+  doc.setFontSize(10);
+  doc.text(`1. Physical Cash Balance: INR ${balances.cashBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 18, 46);
+  doc.text(`2. Bank Account Balance: INR ${balances.bankBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 18, 54);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(16, 185, 129);
+  doc.text(`Total Available Liquid Funds: INR ${(balances.cashBalance + balances.bankBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 18, 64);
+
+  // Incomes Received Section
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text("RECEIVED FUNDS / INCOME LOG", 14, 78);
+
+  let y = 84;
+  doc.setFontSize(9);
+  doc.setFillColor(30, 41, 59);
+  doc.rect(14, y, 182, 7, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.text("Date", 16, y + 5);
+  doc.text("Title / Source", 45, y + 5);
+  doc.text("Deposit To", 115, y + 5);
+  doc.text("Amount (INR)", 160, y + 5);
+
+  y += 11;
+  doc.setTextColor(30, 41, 59);
+
+  const activeIncomes = incomes.filter((i) => i.status !== "deleted");
+  if (activeIncomes.length === 0) {
+    doc.text("No income records logged yet.", 16, y);
+    y += 10;
+  } else {
+    activeIncomes.slice(0, 20).forEach((inc) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      const titleShort = inc.title.length > 30 ? inc.title.substring(0, 28) + "..." : inc.title;
+      doc.text(inc.date || "", 16, y);
+      doc.text(titleShort, 45, y);
+      doc.text(inc.destinationAccount || "Bank", 115, y);
+      doc.text(`+INR ${inc.amount.toLocaleString("en-IN")}`, 160, y);
+      y += 7;
+    });
+  }
 
   doc.save(filename);
 }

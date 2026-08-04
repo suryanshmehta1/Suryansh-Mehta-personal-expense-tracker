@@ -38,6 +38,7 @@ import {
   getDoc,
   getDocs,
   deleteDoc,
+  onSnapshot,
 } from "firebase/firestore";
 
 export default function App() {
@@ -138,45 +139,82 @@ export default function App() {
     localStorage.setItem("mehta_recurring_v2", JSON.stringify(recurringList));
   }, [recurringList]);
 
-  // Firestore initial load & sync attempt
+  // Firestore real-time synchronization across devices
   useEffect(() => {
-    async function loadFirestoreData() {
-      try {
-        const uid = user.uid;
+    const uid = user.uid;
+    let unsubscribeExpenses: () => void;
+    let unsubscribeIncomes: () => void;
+    let unsubscribeBalances: () => void;
 
-        // Load expenses
-        const colRef = collection(db, "users", uid, "expenses");
-        const snapshot = await getDocs(colRef);
-        if (!snapshot.empty) {
-          const loaded: Expense[] = [];
-          snapshot.forEach((doc) => {
-            loaded.push(doc.data() as Expense);
-          });
-          setExpenses(loaded);
-        }
+    try {
+      // 1. Real-time Expenses Listener
+      const expensesCol = collection(db, "users", uid, "expenses");
+      unsubscribeExpenses = onSnapshot(
+        expensesCol,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const loaded: Expense[] = [];
+            snapshot.forEach((doc) => {
+              loaded.push(doc.data() as Expense);
+            });
+            // Sort by date/time descending
+            loaded.sort((a, b) => new Date(`${b.date}T${b.time || "00:00"}`).getTime() - new Date(`${a.date}T${a.time || "00:00"}`).getTime());
+            setExpenses(loaded);
+          }
+        },
+        (err) => console.log("Firestore expenses subscription error:", err)
+      );
 
-        // Load incomes
-        const incomeColRef = collection(db, "users", uid, "incomes");
-        const incomeSnap = await getDocs(incomeColRef);
-        if (!incomeSnap.empty) {
-          const loadedIncomes: Income[] = [];
-          incomeSnap.forEach((doc) => {
-            loadedIncomes.push(doc.data() as Income);
-          });
-          setIncomes(loadedIncomes);
-        }
+      // 2. Real-time Incomes Listener
+      const incomesCol = collection(db, "users", uid, "incomes");
+      unsubscribeIncomes = onSnapshot(
+        incomesCol,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const loadedIncomes: Income[] = [];
+            snapshot.forEach((doc) => {
+              loadedIncomes.push(doc.data() as Income);
+            });
+            loadedIncomes.sort((a, b) => new Date(`${b.date}T${b.time || "00:00"}`).getTime() - new Date(`${a.date}T${a.time || "00:00"}`).getTime());
+            setIncomes(loadedIncomes);
+          }
+        },
+        (err) => console.log("Firestore incomes subscription error:", err)
+      );
 
-        // Load balances
-        const balancesDocRef = doc(db, "users", uid, "account", "balances");
-        const balancesSnap = await getDoc(balancesDocRef);
-        if (balancesSnap.exists()) {
-          setBalances(balancesSnap.data() as AccountBalances);
-        }
-      } catch (err) {
-        console.log("Firestore load fallback to local state:", err);
-      }
+      // 3. Real-time Account Balances Listener
+      const balancesDocRef = doc(db, "users", uid, "account", "balances");
+      unsubscribeBalances = onSnapshot(
+        balancesDocRef,
+        async (docSnap) => {
+          if (docSnap.exists()) {
+            setBalances(docSnap.data() as AccountBalances);
+          } else {
+            // Seed initial balances to Firestore (₹1,570 Cash & ₹6,927.86 Bank)
+            const initial: AccountBalances = {
+              cashBalance: 1570,
+              bankBalance: 6927.86,
+              updatedAt: new Date().toISOString(),
+            };
+            try {
+              await setDoc(balancesDocRef, initial);
+              setBalances(initial);
+            } catch (e) {
+              console.log("Error seeding initial balances:", e);
+            }
+          }
+        },
+        (err) => console.log("Firestore balances subscription error:", err)
+      );
+    } catch (err) {
+      console.log("Firestore subscription setup fallback:", err);
     }
-    loadFirestoreData();
+
+    return () => {
+      if (unsubscribeExpenses) unsubscribeExpenses();
+      if (unsubscribeIncomes) unsubscribeIncomes();
+      if (unsubscribeBalances) unsubscribeBalances();
+    };
   }, [user.uid]);
 
   // Handle Save Expense (Add or Edit)
@@ -432,7 +470,11 @@ export default function App() {
           )}
 
           {activeTab === "reports" && (
-            <GoogleSheetsExportView expenses={expenses} />
+            <GoogleSheetsExportView
+              expenses={expenses}
+              incomes={incomes}
+              balances={balances}
+            />
           )}
 
           {activeTab === "ai_advisor" && <FlashAiAdvisor expenses={expenses} />}

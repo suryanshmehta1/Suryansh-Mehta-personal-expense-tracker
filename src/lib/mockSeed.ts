@@ -9,8 +9,8 @@ const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getM
 export const INITIAL_MOCK_EXPENSES: Expense[] = [];
 
 export const DEFAULT_BALANCES: AccountBalances = {
-  cashBalance: 0,
-  bankBalance: 0,
+  cashBalance: 1570,
+  bankBalance: 6927.86,
   updatedAt: new Date().toISOString(),
 };
 
