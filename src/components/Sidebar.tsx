@@ -109,13 +109,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Account Info Footer */}
-      <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-400 text-[11px] space-y-1">
-        <p className="font-semibold text-slate-300">Suryansh Mehta</p>
-        <p className="text-slate-400 font-mono text-[10px]">Currency: INR (₹)</p>
-        <p className="text-emerald-400 text-[10px] flex items-center gap-1 mt-1">
-          ● Firestore Database Sync Active
+      {/* Account Info & Footer */}
+      <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800/80 text-slate-400 text-[11px] space-y-1.5 shadow-inner">
+        <div className="flex items-center justify-between">
+          <p className="font-bold text-slate-200">Suryansh Mehta</p>
+          <span className="text-[10px] text-emerald-400 font-mono">INR (₹)</span>
+        </div>
+        <p className="text-emerald-400 text-[10px] flex items-center gap-1 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Firestore Sync Connected
         </p>
+        <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 font-medium text-center">
+          Designed & Developed by <strong className="text-slate-200">Suryansh Mehta</strong>
+        </div>
       </div>
     </aside>
   );

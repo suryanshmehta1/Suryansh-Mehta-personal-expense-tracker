@@ -83,28 +83,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Income calculations
   const monthIncomes = activeIncomes.filter((i) => i.date.startsWith(currentMonthStr));
-  const monthIncomeTotal = monthIncomes.reduce((sum, i) => sum + i.amount, 0);
+  const monthIncomeTotal = monthIncomes.reduce((sum, i) => sum + Number(i.amount || 0), 0);
 
   // 1. Today's Expenses
   const todayExpenses = activeExpenses.filter((e) => e.date === todayStr);
-  const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const todayTotal = todayExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   // 2. This Week Expenses (last 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(now.getDate() - 7);
   const weekExpenses = activeExpenses.filter((e) => new Date(e.date) >= sevenDaysAgo);
-  const weekTotal = weekExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const weekTotal = weekExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   // 3. This Month Expenses
   const monthExpenses = activeExpenses.filter((e) => e.date.startsWith(currentMonthStr));
-  const monthTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const monthTotal = monthExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   // 4. This Year Expenses
   const yearExpenses = activeExpenses.filter((e) => e.date.startsWith(currentYearStr));
-  const yearTotal = yearExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const yearTotal = yearExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   // 5. Total Expenses
-  const grandTotal = activeExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const grandTotal = activeExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   // 6. Average Daily Spending (based on days elapsed in month)
   const daysInMonth = now.getDate() || 1;
@@ -617,6 +617,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Developer Footer */}
+      <footer className="pt-6 pb-2 text-center text-xs text-slate-400 border-t border-slate-800/80 font-medium">
+        Designed & Developed by <span className="text-slate-200 font-bold">Suryansh Mehta</span>
+      </footer>
     </div>
   );
 };

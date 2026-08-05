@@ -190,10 +190,10 @@ export default function App() {
           if (docSnap.exists()) {
             setBalances(docSnap.data() as AccountBalances);
           } else {
-            // Seed initial balances to Firestore (₹1,570 Cash & ₹6,927.86 Bank)
+            // Seed initial balances to Firestore (₹0 Cash & ₹0 Bank)
             const initial: AccountBalances = {
-              cashBalance: 1570,
-              bankBalance: 6927.86,
+              cashBalance: 0,
+              bankBalance: 0,
               updatedAt: new Date().toISOString(),
             };
             try {
@@ -351,24 +351,50 @@ export default function App() {
     setIsAddModalOpen(true);
   };
 
-  const handleToggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  // Handle Reimbursement (Money Returned)
+  const handleMarkReimbursed = async (exp: Expense) => {
+    const updatedExp: Expense = {
+      ...exp,
+      isReimbursed: true,
+      reimbursedAt: new Date().toISOString(),
+    };
+
+    setExpenses((prev) =>
+      prev.map((e) => (e.id === exp.id ? updatedExp : e))
+    );
+
+    // Automatically credit the money back to user balance
+    let updatedBalances: AccountBalances | null = null;
+    setBalances((prev) => {
+      const returnAmt = Number(exp.amount || 0);
+      if (exp.paymentMethod === "Cash") {
+        updatedBalances = {
+          ...prev,
+          cashBalance: prev.cashBalance + returnAmt,
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        updatedBalances = {
+          ...prev,
+          bankBalance: prev.bankBalance + returnAmt,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return updatedBalances;
+    });
+
+    try {
+      await setDoc(doc(db, "users", user.uid, "expenses", exp.id), updatedExp);
+      if (updatedBalances) {
+        await setDoc(doc(db, "users", user.uid, "account", "balances"), updatedBalances);
+      }
+    } catch (e) {
+      console.log("Firestore reimbursement sync warning:", e);
+    }
   };
 
-  const handleResetSeedData = () => {
-    setExpenses([]);
-    setIncomes([]);
-    setBalances(DEFAULT_BALANCES);
-    setBudget(DEFAULT_BUDGET);
-    setRecurringList([]);
-    localStorage.removeItem("mehta_expenses_v1");
-    localStorage.removeItem("mehta_budget_v1");
-    localStorage.removeItem("mehta_recurring_v1");
-    localStorage.removeItem("mehta_expenses_v2");
-    localStorage.removeItem("mehta_budget_v2");
-    localStorage.removeItem("mehta_recurring_v2");
-    localStorage.removeItem("mehta_balances_v2");
-    localStorage.removeItem("mehta_incomes_v2");
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
@@ -403,8 +429,8 @@ export default function App() {
           onOpenScanReceipt={() => setIsOcrModalOpen(true)}
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
+        {/* Main Content Area with Mobile Bottom Nav Clearance */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto pb-28 md:pb-8">
           {activeTab === "dashboard" && (
             <Dashboard
               expenses={expenses}
@@ -439,6 +465,7 @@ export default function App() {
                 setEditingExpense(null);
                 setIsAddModalOpen(true);
               }}
+              onMarkReimbursed={handleMarkReimbursed}
             />
           )}
 
@@ -486,7 +513,6 @@ export default function App() {
               onToggleTheme={handleToggleTheme}
               onUpdateUser={(updated) => setUser((prev) => ({ ...prev, ...updated }))}
               expenses={expenses}
-              onResetSeedData={handleResetSeedData}
             />
           )}
         </main>

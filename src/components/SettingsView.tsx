@@ -19,7 +19,6 @@ interface SettingsViewProps {
   onToggleTheme: () => void;
   onUpdateUser: (updated: Partial<UserProfile>) => void;
   expenses: Expense[];
-  onResetSeedData: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -28,7 +27,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleTheme,
   onUpdateUser,
   expenses,
-  onResetSeedData,
 }) => {
   const [displayName, setDisplayName] = useState(user.displayName);
   const [currency, setCurrency] = useState<CurrencyCode>(user.currency || "INR");
@@ -131,10 +129,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Backup & Database Management */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-lg">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Database className="w-4 h-4 text-emerald-400" /> Data Backup & Database Management
+          <Database className="w-4 h-4 text-emerald-400" /> Data Backup & Security
         </h3>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-400">
+            Your expense, income, and account balance data is safely persisted in Google Cloud Firestore.
+            You can export a complete JSON copy of your records anytime.
+          </p>
+
           <button
             onClick={handleBackupJSON}
             className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20"
@@ -142,20 +145,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <Download className="w-4 h-4" />
             <span>Download Full JSON Backup</span>
           </button>
-
-          <button
-            onClick={() => {
-              if (confirm("Reset database to initial seed expenses for Suryansh Mehta?")) {
-                onResetSeedData();
-              }
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-          >
-            <RefreshCw className="w-4 h-4 text-amber-400" />
-            <span>Restore Seed Test Data</span>
-          </button>
         </div>
       </div>
+
+      {/* Developer Footer */}
+      <footer className="pt-6 pb-2 text-center text-xs text-slate-400 border-t border-slate-800/80 font-medium">
+        Designed & Developed by <span className="text-slate-200 font-bold">Suryansh Mehta</span>
+      </footer>
     </div>
   );
 };

@@ -131,6 +131,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [tags, setTags] = useState<string[]>([]);
   const [isRecurring, setIsRecurring] = useState(false);
 
+  // Shared / Owed Expense State
+  const [isSharedForOther, setIsSharedForOther] = useState(false);
+  const [paidForPersonName, setPaidForPersonName] = useState("");
+  const [paidForPersonContact, setPaidForPersonContact] = useState("");
+
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
   const [voiceFeedback, setVoiceFeedback] = useState("");
@@ -151,6 +156,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setNotes(initialExpense.notes || "");
       setTags(initialExpense.tags || []);
       setIsRecurring(!!initialExpense.isRecurring);
+      setIsSharedForOther(!!initialExpense.isSharedForOther);
+      setPaidForPersonName(initialExpense.paidForPersonName || "");
+      setPaidForPersonContact(initialExpense.paidForPersonContact || "");
       setReceiptUrl(initialExpense.receiptUrl || "");
 
       if (initialExpense.paymentDetails?.bank) {
@@ -301,6 +309,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       notes,
       tags,
       isRecurring,
+      isSharedForOther,
+      paidForPersonName,
+      paidForPersonContact,
       status: "paid",
     });
 
@@ -731,17 +742,60 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between mt-1">
-              <div>
-                <p className="text-xs font-semibold text-slate-200">Recurring Expense</p>
-                <p className="text-[10px] text-slate-400">Mark if this bill repeats monthly or weekly</p>
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-200">Recurring Expense</p>
+                  <p className="text-[10px] text-slate-400">Mark if this bill repeats monthly or weekly</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 focus:ring-blue-500"
+                />
               </div>
-              <input
-                type="checkbox"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 focus:ring-blue-500"
-              />
+
+              {/* Paid for someone else / Shared Owed Expense Toggle */}
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-amber-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-amber-400">Paid for Someone Else / Owed Expense</p>
+                    <p className="text-[10px] text-slate-400">Enable to track money owed to you and send payment reminder</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isSharedForOther}
+                    onChange={(e) => setIsSharedForOther(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700 focus:ring-amber-500"
+                  />
+                </div>
+
+                {isSharedForOther && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800 animate-in fade-in">
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-300 block mb-1">Person's Name *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Rahul Sharma, Aman"
+                        value={paidForPersonName}
+                        onChange={(e) => setPaidForPersonName(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-300 block mb-1">Phone / UPI VPA (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 9876543210 or rahul@upi"
+                        value={paidForPersonContact}
+                        onChange={(e) => setPaidForPersonContact(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

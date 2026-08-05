@@ -96,6 +96,11 @@ export interface Expense {
   notes?: string;
   tags?: string[];
   isRecurring?: boolean;
+  isSharedForOther?: boolean;
+  paidForPersonName?: string;
+  paidForPersonContact?: string;
+  isReimbursed?: boolean;
+  reimbursedAt?: string;
   status: "paid" | "pending" | "cancelled" | "deleted";
   createdAt: string;
   updatedAt: string;

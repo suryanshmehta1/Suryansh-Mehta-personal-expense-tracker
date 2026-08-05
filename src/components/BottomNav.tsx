@@ -128,12 +128,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 );
               })}
             </div>
+
+            <div className="pt-3 border-t border-slate-800/80 text-center text-[11px] text-slate-400 font-medium">
+              Designed & Developed by <strong className="text-slate-200">Suryansh Mehta</strong>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Fixed Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2 flex items-center justify-around">
+      {/* Fixed Bottom Bar - Flush to Mobile Screen Edge */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-2 py-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around shadow-2xl">
         {primaryItems.slice(0, 2).map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -141,8 +145,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <button
               key={item.id}
               onClick={() => handleSelectTab(item.id as NavTab)}
-              className={`flex flex-col items-center gap-1 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
-                isActive ? "text-blue-400" : "text-slate-400 hover:text-slate-200"
+              className={`flex flex-col items-center gap-0.5 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
+                isActive ? "text-blue-400 font-bold" : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -151,10 +155,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           );
         })}
 
-        {/* Floating Center Add Button */}
+        {/* Center Add Expense Action */}
         <button
           onClick={onOpenAddExpense}
-          className="-mt-5 w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 border-2 border-slate-900 active:scale-95 transition-transform shrink-0"
+          className="-mt-3 w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 border-2 border-slate-950 active:scale-95 transition-transform shrink-0"
           aria-label="Add Expense"
         >
           <PlusCircle className="w-6 h-6 text-white" />
@@ -167,8 +171,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <button
               key={item.id}
               onClick={() => handleSelectTab(item.id as NavTab)}
-              className={`flex flex-col items-center gap-1 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
-                isActive ? "text-blue-400" : "text-slate-400 hover:text-slate-200"
+              className={`flex flex-col items-center gap-0.5 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
+                isActive ? "text-blue-400 font-bold" : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -180,8 +184,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* More Menu Trigger */}
         <button
           onClick={() => setShowMoreMenu(true)}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
-            showMoreMenu ? "text-blue-400" : "text-slate-400 hover:text-slate-200"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 min-h-[44px] justify-center text-[10px] font-medium transition-colors ${
+            showMoreMenu ? "text-blue-400 font-bold" : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <MoreHorizontal className="w-5 h-5" />

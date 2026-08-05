@@ -36,7 +36,7 @@ app.post("/api/ai/ocr", async (req, res) => {
     }
 
     const ai = getGenAI();
-    const prompt = `Analyze this receipt / invoice image and extract key expense data in valid JSON format only (no markdown, no code block delimiters).
+    const prompt = `Analyze this receipt / invoice image or document and extract key expense data in valid JSON format only (no markdown, no code block delimiters).
 Return JSON with the following structure:
 {
   "title": "Short descriptive title of expense/merchant",
@@ -53,11 +53,21 @@ Return JSON with the following structure:
   "confidence": 0.95
 }`;
 
-    // Clean base64 string
-    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    // Clean any data URI prefix (e.g. data:image/png;base64, or data:application/pdf;base64,)
+    const cleanBase64 = imageBase64.replace(/^data:[^;]+;base64,/, "");
+
+    // Determine correct MIME type
+    let effectiveMimeType = mimeType || "image/jpeg";
+    if (imageBase64.startsWith("data:application/pdf")) {
+      effectiveMimeType = "application/pdf";
+    } else if (imageBase64.startsWith("data:image/png")) {
+      effectiveMimeType = "image/png";
+    } else if (imageBase64.startsWith("data:image/webp")) {
+      effectiveMimeType = "image/webp";
+    }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: [
         {
           role: "user",
@@ -66,7 +76,7 @@ Return JSON with the following structure:
             {
               inlineData: {
                 data: cleanBase64,
-                mimeType: mimeType || "image/jpeg",
+                mimeType: effectiveMimeType,
               },
             },
           ],
@@ -77,8 +87,9 @@ Return JSON with the following structure:
       },
     });
 
-    const text = response.text || "{}";
-    const data = JSON.parse(text);
+    let rawText = response.text || "{}";
+    rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const data = JSON.parse(rawText);
     return res.json({ success: true, data });
   } catch (error: any) {
     console.error("OCR API Error:", error);
@@ -103,9 +114,9 @@ app.post("/api/ai/chat", async (req, res) => {
     // Select model based on thinking requirement
     const model = enableThinking
       ? "gemini-3.1-pro-preview"
-      : "gemini-3.5-flash";
+      : "gemini-3.6-flash";
 
-    const systemInstruction = `You are "Flash AI", the personal intelligent financial advisor and cost-optimization chatbot for Suryansh Mehta in the "Mehta Expense Tracker" app.
+    const systemInstruction = `You are "Flash AI", the personal intelligent financial advisor and cost-optimization chatbot for Suryansh Mehta in the "Expense Tracker" app.
 Your goals:
 1. Provide actionable, highly context-aware financial guidance, budget optimization, and spending habit insights for Suryansh Mehta based on his expense records.
 2. Whenever asked about purchasing products or comparing costs, actively evaluate payment modes (Cash vs Paytm vs PhonePe vs Credit Card vs UPI) to suggest the most cost-effective checkout method (considering cashback, processing fees, reward points, zero-cost EMI, or cash discounts).

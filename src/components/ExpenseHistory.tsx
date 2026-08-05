@@ -17,6 +17,8 @@ import {
   FileText,
   X,
   CheckCircle2,
+  Share2,
+  Check,
 } from "lucide-react";
 import { Expense, SearchFilterState, PaymentMethod } from "../types";
 import { formatCurrency, exportToCSV } from "../lib/exportUtils";
@@ -27,6 +29,7 @@ interface ExpenseHistoryProps {
   onSoftDeleteExpense: (expId: string) => void;
   onRestoreExpense: (expId: string) => void;
   onOpenAddExpense: () => void;
+  onMarkReimbursed?: (exp: Expense) => void;
 }
 
 export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
@@ -35,6 +38,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
   onSoftDeleteExpense,
   onRestoreExpense,
   onOpenAddExpense,
+  onMarkReimbursed,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<SearchFilterState["dateRange"]>("all");
@@ -348,8 +352,15 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                   <td className="p-3 font-mono text-slate-400">{exp.date}</td>
                   <td className="p-3 font-semibold text-slate-100">
                     <div>{exp.title}</div>
+                    {exp.isSharedForOther && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-medium">
+                          Owed by: {exp.paidForPersonName || "Someone"}
+                        </span>
+                      </div>
+                    )}
                     {exp.vendor && (
-                      <span className="text-[10px] text-slate-400 font-normal">
+                      <span className="text-[10px] text-slate-400 font-normal block">
                         {exp.vendor}
                       </span>
                     )}
@@ -364,12 +375,48 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                     {formatCurrency(exp.amount, exp.currency)}
                   </td>
                   <td className="p-3 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize">
-                      {exp.status}
-                    </span>
+                    {exp.isSharedForOther ? (
+                      exp.isReimbursed ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold">
+                          Reimbursed
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold animate-pulse">
+                          Pending Return
+                        </span>
+                      )
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize">
+                        {exp.status}
+                      </span>
+                    )}
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1.5">
+                      {exp.isSharedForOther && !exp.isReimbursed && (
+                        <>
+                          <a
+                            href={`https://wa.me/${exp.paidForPersonContact?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                              `Hi ${exp.paidForPersonName || "there"}, I paid ${formatCurrency(exp.amount, exp.currency)} for "${exp.title}" on ${exp.date}. Please settle via UPI when convenient!`
+                            )}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-800 text-emerald-300 border border-emerald-700/60 transition-colors"
+                            title="Send WhatsApp Payment Reminder"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </a>
+                          {onMarkReimbursed && (
+                            <button
+                              onClick={() => onMarkReimbursed(exp)}
+                              className="p-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-800 text-amber-300 border border-amber-700/60 transition-colors"
+                              title="Mark Money Returned / Reimbursed"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </>
+                      )}
                       <button
                         onClick={() => setViewingExpense(exp)}
                         className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
