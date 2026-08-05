@@ -151,7 +151,7 @@ export default function App() {
       const expensesCol = collection(db, "users", uid, "expenses");
       unsubscribeExpenses = onSnapshot(
         expensesCol,
-        (snapshot) => {
+        async (snapshot) => {
           if (!snapshot.empty) {
             const loaded: Expense[] = [];
             snapshot.forEach((doc) => {
@@ -160,6 +160,16 @@ export default function App() {
             // Sort by date/time descending
             loaded.sort((a, b) => new Date(`${b.date}T${b.time || "00:00"}`).getTime() - new Date(`${a.date}T${a.time || "00:00"}`).getTime());
             setExpenses(loaded);
+          } else {
+            // Seed initial default expenses to Firestore if empty
+            for (const exp of INITIAL_MOCK_EXPENSES) {
+              try {
+                await setDoc(doc(db, "users", uid, "expenses", exp.id), exp);
+              } catch (e) {
+                console.log("Error seeding initial expense:", e);
+              }
+            }
+            setExpenses(INITIAL_MOCK_EXPENSES);
           }
         },
         (err) => console.log("Firestore expenses subscription error:", err)
@@ -190,12 +200,8 @@ export default function App() {
           if (docSnap.exists()) {
             setBalances(docSnap.data() as AccountBalances);
           } else {
-            // Seed initial balances to Firestore (₹0 Cash & ₹0 Bank)
-            const initial: AccountBalances = {
-              cashBalance: 0,
-              bankBalance: 0,
-              updatedAt: new Date().toISOString(),
-            };
+            // Seed initial balances to Firestore (₹1,570 Cash & ₹6,927.86 Bank)
+            const initial: AccountBalances = DEFAULT_BALANCES;
             try {
               await setDoc(balancesDocRef, initial);
               setBalances(initial);
